@@ -1,0 +1,31 @@
+{
+  "name": "mazziere",
+  "version": "1.0.0",
+  "description": "Library For Card Analysis In Javascript",
+  "main": "index.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrbenjones/mazziere.git"
+  },
+  "keywords": [
+    "Cards",
+    "games",
+    "probability"
+  ],
+  "author": "Ben Jones <bluefiddleguy@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mrbenjones/mazziere/issues"
+  },
+  "homepage": "https://github.com/mrbenjones/mazziere#readme",
+  "dependencies": {
+    "typescript": "^5.5.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.5"
+  }
+}
