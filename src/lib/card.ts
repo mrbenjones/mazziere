@@ -47,3 +47,17 @@ export function sortedStack<T,S>(stack: Card<T,S>[]): Map<S,Card<T,S>[]> {
         return hand
     }, new Map<S, Card<T,S>[]>)
 }
+
+/**
+ * Sort a stack of cards by rank
+ * @param stack
+ */
+export function sortedStackByRank<T,S>(stack: Card<T,S>[]): Map<T,Card<T,S>[]> {
+    return stack.reduce((hand, card) => {
+        const rank = card.rank;
+        const cards = hand.get(rank) || [];
+        cards.push(card);
+        hand.set(rank, cards);
+        return hand
+    }, new Map<T, Card<T,S>[]>)
+}

@@ -1,5 +1,5 @@
 import {jest, describe, it, expect} from '@jest/globals';
-import {Card, simpleDeck, sortedStack} from './card';
+import {Card, simpleDeck, sortedStack, sortedStackByRank} from './card';
 
 const SCHNAPSRANKS = {
     ACE: 'A',
@@ -49,6 +49,14 @@ describe(
             suits.forEach(suit => {
                 expect(sorted.has(suit)).toBe(true);
                 expect(sorted.get(suit)?.length).toBe(5);
+            })
+        })
+        it ('sorts deck by rank', () => {
+            const deck = simpleDeck(ranks, suits);
+            const sorted = sortedStackByRank(deck);
+            ranks.forEach(rank => {
+                expect(sorted.has(rank)).toBe(true);
+                expect(sorted.get(rank)?.length).toBe(4);
             })
         })
     })
