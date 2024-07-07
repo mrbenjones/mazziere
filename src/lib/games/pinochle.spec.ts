@@ -3,7 +3,7 @@ import {
     DDMeldStrain,
     ddpinochleDeal,
     ddpinochleDeck,
-    DDPINOCHLESUITS,
+    DDPINOCHLESUITS, getAllMeld, getMeldPoints,
     getTypeOneMeld, getTypeThreeMeld, getTypeTwoMeld,
     handFromString,
     sortedSuits,
@@ -95,8 +95,35 @@ describe(
             const result = handFromString(input);
             const meld = getTypeThreeMeld(result[0]);
             expect(meld.get('ALL').length).toBe(3);
-            const meld2 = getTypeTwoMeld( result[0], meld);
+            const meld2 = getTypeTwoMeld( result[0]);
+            expect(meld2.get('ALL').length).toBe(1);
+        })
+        it ('fullMeld', () => {
+            const input = 'SATKQJJHATKJCTKKQQDAAAQJ'
+            const result = handFromString(input)[0];
+            const meld = getAllMeld(result);
+            console.log(meld.get('ALL'))
+            console.log('HEARTS', meld.get(DDPINOCHLESUITS.HEARTS))
+            console.log('DIAMONDS', meld.get(DDPINOCHLESUITS.DIAMONDS))
+            console.log('SPADES', meld.get(DDPINOCHLESUITS.SPADES))
+            console.log('CLUBS', meld.get(DDPINOCHLESUITS.CLUBS))
+            expect(meld.get('ALL').length).toBe(1);
+        })
+        it ('fullMeld', () => {
+            const input = 'SATKQJJHATKJCATKKQQDAAAQJ'
+            const result = handFromString(input)[0];
+            const meld = getAllMeld(result);
             console.log(meld)
-            expect(meld2.get('ALL').length).toBe(4);
+            console.log(getMeldPoints(meld))
+        })
+        it ('sampleMeld', () => {
+            const hand='SJJQKTAHJKTACQQKKTDJQAAA'
+            const meld = getMeldPoints(getAllMeld(handFromString(hand)[0]))
+            console.log(handFromString(hand)[0])
+            console.log(getAllMeld(handFromString(hand)[0]))
+            expect(meld.get('S')).toBe(23);
+            expect(meld.get('H')).toBe(10);
+            expect(meld.get('D')).toBe(10);
+            expect(meld.get('C')).toBe(14);
         })
     });

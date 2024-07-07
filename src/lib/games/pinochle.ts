@@ -80,6 +80,12 @@ export function isCounter(card: DDPinochleCard): boolean {
 
 export type Meld = Map<DDMeldStrain, DDMeldType[]>;
 
+export type MeldProgress = {
+    meld: Meld;
+    cards: DDPinochleCard[];
+}
+
+
 /**
  * Tracker for type 1 meld.
  * <ul>
@@ -130,6 +136,10 @@ export function advanceTypeOne(acc: TypeOneMeldTracker): TypeOneMeldTracker {
 
         if (king && queen && jack && ten && ace) {
             meld.set(currentSuit as DDMeldStrain, [...meld.get(currentSuit) || [], 'RUN']);
+            [...DDPinochleSuitValues].filter(suit => suit !== currentSuit)
+                .forEach(suit => {
+                    meld.set(suit as DDMeldStrain, [...meld.get(suit) || [], 'MARRIAGE']);
+                })
         } else if (king && queen) {
             [...DDPinochleSuitValues].filter(suit => suit !== currentSuit)
                 .forEach(suit => {
@@ -152,8 +162,12 @@ export function startingMeld(): Meld {
     return meld;
 }
 
-export function getTypeOneMeld(stack: DDPinochleCard[], meld: Meld = startingMeld()): Meld {
-    const suits = sortedSuits(stack);
+export function getTypeOneMeldProgress(meldProgress: MeldProgress): MeldProgress {
+    let {meld, cards} = {...meldProgress};
+    if (!meld) {
+        meld = startingMeld();
+    }
+    const suits = sortedSuits(cards);
     let acc = {
         meld: meld || startingMeld(),
         suits: suits
@@ -161,21 +175,23 @@ export function getTypeOneMeld(stack: DDPinochleCard[], meld: Meld = startingMel
     while (acc.suits.length > 0) {
         acc = advanceTypeOne(acc);
     }
-    return acc.meld;
+    return {meld: acc.meld, cards: cards};
 }
 
-export function getTypeTwoMeld(stack: DDPinochleCard[], meld: Meld = startingMeld()): Meld {
-    const stackBySuits = sortedStack(stack)
-    const queens = stack.filter(card => card.rank === 'Q' && card.suit === 'S')
-    const jacks = stack.filter(card => card.rank === 'J' && card.suit === 'D')
+export function getTypeTwoMeldProgress(meldProgress: MeldProgress): MeldProgress {
+    let {meld, cards} = {...meldProgress};
+    const stackBySuits = sortedStack(cards)
+    const queens = cards.filter(card => card.rank === 'Q' && card.suit === 'S')
+    const jacks = cards.filter(card => card.rank === 'J' && card.suit === 'D')
     for (let i = 0; i < Math.min(queens.length, jacks.length); i++) {
         meld.set('ALL', [...meld.get('ALL') || [], 'PINOCHLE'])
     }
-    return meld
+    return {meld: meld, cards: cards}
 }
 
-export function getTypeThreeMeld(stack: DDPinochleCard[], meld: Meld = startingMeld()): Meld {
-    const stackBySuits = sortedStack(stack)
+function getTypeThreeMeldProgress(meldProgress: MeldProgress): MeldProgress {
+    const {meld, cards} = {...meldProgress};
+    const stackBySuits = sortedStack(cards)
     const meldCounts = new Map<DDMeldType, number>(
         [[DDMELDTYPE.ACES_AROUND, 4],
             [DDMELDTYPE.KINGS_AROUND, 4],
@@ -194,7 +210,63 @@ export function getTypeThreeMeld(stack: DDPinochleCard[], meld: Meld = startingM
             meld.set('ALL', [...meld.get('ALL') || [], type])
         }
     }
-    return meld
+    return {meld: meld, cards: cards}
+}
+
+export function getTypeThreeMeld(cards: DDPinochleCard[]) {
+    return getTypeThreeMeldProgress({meld: startingMeld(), cards: cards}).meld
+}
+
+export function getTypeTwoMeld(cards: DDPinochleCard[]) {
+    return getTypeTwoMeldProgress({meld: startingMeld(), cards: cards}).meld
+}
+
+export function getTypeOneMeld(cards: DDPinochleCard[]) {
+    return getTypeOneMeldProgress({meld: startingMeld(), cards: cards}).meld
+}
+
+export function getAllMeld(cards: DDPinochleCard[]) {
+    return getTypeThreeMeldProgress(
+            getTypeTwoMeldProgress(
+            getTypeOneMeldProgress({meld: startingMeld(), cards: cards})
+        )).meld
+}
+
+const meldTable = new Map<DDMeldType, number[]> (
+    [[DDMELDTYPE.RUN, [15, 150, 225, 300]],
+    [DDMELDTYPE.MARRIAGE,[2, 2, 2,2 ]],
+    [DDMELDTYPE.ACES_AROUND,[10, 100, 150, 200]],
+    [DDMELDTYPE.KINGS_AROUND,[8, 80, 120, 160]],
+    [DDMELDTYPE.QUEENS_AROUND,[6, 60, 90, 120]],
+    [DDMELDTYPE.JACKS_AROUND,[4, 40, 60, 80]],
+        [DDMELDTYPE.PINOCHLE,[4, 30, 60, 90]],
+        [DDMELDTYPE.TRUMP_MARRIAGE,[4, 4, 4, 4]],
+        [DDMELDTYPE.TRUMP_MARRIAGE,[4, 4, 4, 4]]
+    ],
+)
+
+/**
+ *
+ * @param meld
+ */
+export function getMeldPoints(meld: Meld): Map<DDPinochleSuit, number> {
+    const points = new Map<DDPinochleSuit, number>();
+    // get counts by meld type
+    const counts = new Map<DDMeldType, number>();
+    let allCount = 0
+    for (const meldType of meld.get('ALL')) {
+        const typeCount = (meld.get('ALL')||[]).filter(type => type === meldType).length;
+        allCount += meldTable.get(meldType)?.[typeCount-1] || 0;
+    }
+    for (const suit of DDPinochleSuitValues) {
+        let suitCount = 0;
+        for (const meldType of meld.get(suit)) {
+            const typeCount = (meld.get(suit)||[]).filter(type => type === meldType).length;
+            suitCount += meldTable.get(meldType)?.[typeCount-1] || 0;
+        }
+        points.set(suit, suitCount+allCount);
+    }
+    return points
 }
 
 /**
